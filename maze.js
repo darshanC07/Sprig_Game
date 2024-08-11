@@ -26,15 +26,15 @@ setLegend(
 ................
 ................
 .......000......
-.......0.0......
-......0..0......
-......0...0.0...
-....0003.30.0...
-....0.0...000...
+.......020......
+......0220......
+......02220.0...
+....0003230.0...
+....0.0222000...
 ....0.05550.....
-......0...0.....
-.....0....0.....
-.....0...0......
+......02220.....
+.....022220.....
+.....02220......
 ......000.......
 ......0.0.......
 .....00.00......
@@ -369,7 +369,20 @@ function new_game() {
       size: 0.5,
       color: color`2`
     })
+    addText("\nPress 'k' to start", {
+      x: 1,
+      y: 10,
+      size: 0.5,
+      color: color`4`
+    })
+    addText("-Darshan", {
+      x: 12,
+      y: 15,
+      size: 0.5,
+      color: color`2`
+    })
 
+  }
 }
 new_game();
 
@@ -420,7 +433,21 @@ function success(background) {
       size: 1,
       color: color`7`
     })
-  } 
+  } else if (background == "Desert") {
+    setBackground(desert);
+    addText(background, {
+      x: 2,
+      y: 5,
+      size: 1,
+      color: color`9`
+    })
+    addText(background, {
+      x: 6,
+      y: 9,
+      size: 1,
+      color: color`9`
+    })
+  }
 }
 
 function shop() {
@@ -455,6 +482,18 @@ function shop() {
   addText("Water", {
     x: 4,
     y: 9,
+    size: 1,
+    color: color`2`
+  });
+  addText("16(k)", {
+    x: 15,
+    y: 9,
+    size: 1,
+    color: color`2`
+  });
+  addText("Desert", {
+    x: 4,
+    y: 12,
     size: 1,
     color: color`2`
   });
@@ -510,7 +549,23 @@ function handlePurchase(price, background) {
   //     // }
   //   }
   // };
-
+  if (totalCoins >= price) {
+    success(background);
+    totalCoins -= price;
+    setTimeout(shop, 2000)
+  } else {
+    clearText();
+    current_map = n_enough_coins;
+    setMap(n_enough_coins);
+    console.log("else", totalCoins);
+    addText("not enough Coins", {
+      x: 2,
+      y: 7,
+      size: 1,
+      color: color`2`
+    });
+    setTimeout(shop, 2000)
+  }
 
 }
 
@@ -557,9 +612,31 @@ function next_level() {
       size: 1,
       color: color`2`
     })
-
+    addText("Total Coins =   " + totalCoins, {
+      x: 1,
+      y: 11,
+      size: 1,
+      color: color`6`
+    })
+    addText(" press 'i' to\n  open shop", {
+      x: 3,
+      y: 13,
+      size: 1,
+      color: color`4`
+    })
+    onInput("i", () => {
+      shop()
+    })
+  }
 }
-
+var start = Date.now();
+setInterval(function() {
+    var delta = Date.now() - start; // milliseconds elapsed since start
+    …
+    output(Math.floor(delta / 1000)); // in seconds
+    // alternatively just show wall clock time:
+    output(new Date().toUTCString());
+}, 1000); // update about every second
 //music for different events
 const bgm = tune`
 82.41758241758242: D5-82.41758241758242 + undefined/82.41758241758242,
@@ -594,7 +671,18 @@ const bgm = tune`
 82.41758241758242: G4-82.41758241758242,
 82.41758241758242: G4-82.41758241758242`;
 
-
+const win = tune`
+208.33333333333334: C4-208.33333333333334 + undefined/208.33333333333334,
+208.33333333333334: D4-208.33333333333334,
+208.33333333333334: E4-208.33333333333334 + undefined/208.33333333333334,
+208.33333333333334: F4-208.33333333333334 + undefined/208.33333333333334,
+208.33333333333334: G4-208.33333333333334,
+208.33333333333334: A4-208.33333333333334 + undefined/208.33333333333334,
+208.33333333333334: G4-208.33333333333334 + undefined/208.33333333333334,
+208.33333333333334: C5-208.33333333333334,
+208.33333333333334: B4-208.33333333333334 + undefined/208.33333333333334,
+208.33333333333334: C5-208.33333333333334 + undefined/208.33333333333334,
+4583.333333333334`;
 
 const coin_music = tune`
 164.83516483516485: E5-164.83516483516485,
@@ -604,8 +692,23 @@ const coin_music = tune`
 const playback = playTune(bgm, Infinity)
 
 
-let totalCoins = 26
+let totalCoins = 0
 let coins_earned = 0
+
+var interval = 1000; // ms
+var expected = Date.now() + interval;
+setTimeout(step, interval);
+function step() {
+    var dt = Date.now() - expected; // the drift (positive for overshooting)
+    if (dt > interval) {
+        // something really bad happened. Maybe the browser (tab) was inactive?
+        // possibly special handling to avoid futile "catch up" run
+    }
+    … // do what is to be done
+
+    expected += interval;
+    setTimeout(step, Math.max(0, interval - dt)); // take into account drift
+}
 
 afterInput(() => {
 
@@ -670,5 +773,17 @@ afterInput(() => {
         })
         setTimeout(next_level, 2000)
       }
-    } 
+    } else if (level == 3) {
+      if (player_tile_x == 17 && player_tile_y == 16) {
+        let winning_msg = addText("You Won!!!", {
+          x: 5,
+          y: 7,
+          size: 5,
+          color: color`0`
+        })
+        setTimeout(next_level, 2000)
+        current_map = "shop";
+      }
+    }
+  }
 })
