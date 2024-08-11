@@ -16,8 +16,10 @@ const border = "b"
 const coin = "c"
 const exit = "e"
 const bg = "f"
-const background_grass = "g"
-
+const grass = "g"
+const water = "w"
+const white = "h"
+const desert = "d"
 
 setLegend(
   [player, bitmap`
@@ -105,7 +107,7 @@ LLLLLLLLLLLLLLLL
 LLLLLLLLLLLLLLLL
 LLLLLLLLLLLLLLLL
 LLLLLLLLLLLLLLLL`],
-  [background_grass,bitmap`
+  [grass, bitmap`
 DD44DDDDDDDDD4DD
 D44D4DD44DDDDD4D
 D44DD44DD4DD4D4D
@@ -121,12 +123,106 @@ D4DD4DD44D4444D4
 DDDDDD4D4D4D44D4
 4DDDDDD4D4DDD444
 4DD4444444D444D4
-DDDDDDDDD44DDDDD`]
+DDDDDDDDD44DDDDD`],
+  [water, bitmap`
+5555555555555555
+5222555777555555
+5577555552257775
+5555775552255555
+5555755775577555
+5755755555555555
+5555555557555755
+5555552257757555
+5577555555555222
+5552225777755555
+5555555555557755
+7775575755557755
+5755575757775555
+5577775555555555
+5555777775777755
+5555555555555555`],
+  [desert, bitmap`
+F66F9999999FF6FF
+FFF6FFF9FFF996FF
+FF996FFFFF9969FF
+F999FF66999FCC9F
+F99FF9FFFCCC6F99
+9FFF9FFC6FFFF99F
+9FF9FFF999999F66
+99FFC9F9699966FF
+FF9C66999F66CFFF
+99C9999F66FCF9F6
+FCC99FF99FFFFFFF
+F99CCFFF6996FFFF
+FFFFFF9FFFF999FF
+F9FFFFF9CCFF99FF
+F9FFF6CCFFFFFF9F
+F699999999999999`],
+  [white , bitmap`
+2222222222222222
+2222222222222222
+2222222222222222
+2222222222222222
+2222222222222222
+2222222222222222
+2222222222222222
+2222222222222222
+2222222222222222
+2222222222222222
+2222222222222222
+2222222222222222
+2222222222222222
+2222222222222222
+2222222222222222
+2222222222222222`]
 )
 
+let n_enough_coins = map`
+fffffffffffff
+fffffffffffff
+fffffffffffff
+fffffffffffff
+fffffffffffff
+fffffffffffff
+fffffffffffff
+fffffffffffff
+fffffffffffff
+fffffffffffff
+fffffffffffff
+fffffffffffff`
+let success_buy = map`
+fffffffffffffffff
+fffffffffffffffff
+fffffffffffffffff
+fffffffffffffffff
+fffffffffffffffff
+fffffffffffffffff
+fffffffffffffffff
+fffffffffffffffff
+fffffffffffffffff
+fffffffffffffffff
+fffffffffffffffff
+fffffffffffffffff`
+let shop_map = map`
+fffffffffffffffffff
+fffffffffffffffffff
+ffffffffffffffcffff
+fffffffffffffffffff
+fffffffffffffffffff
+fggffffffffffffffff
+fggffffffffffcfffff
+fffffffffffffffffff
+fwwffffffffffcfffff
+fwwffffffffffffffff
+fffffffffffffffffff
+fddffffffffffcfffff
+fddffffffffffffffff
+fffffffffffffffffff
+fffffffffffffffffff`
 setSolids([player, border])
 
-let level = 3
+let level = 0
+let current_map = level;
 const levels = [
   map`
 ffffffffff
@@ -138,8 +234,8 @@ ffffffffff
 ffffffffff
 ffffffffff`,
   map`
-..............
-..............
+hhhhhhhhhhhhhh
+hhhhhhhhhhhhhh
 bbbbbbbbbbbbbb
 b......b.....b
 b.c....b.bbbbb
@@ -156,11 +252,11 @@ b.b..c...b.b.b
 b.bbbbb..b.b.b
 b...c....b.b.b
 bbbbbbbbbb.bbb
-..............
-..............`,
+hhhhhhhhhhhhhh
+hhhhhhhhhhhhhh`,
   map`
-.....................
-.....................
+hhhhhhhhhhhhhhhhhhhhh
+hhhhhhhhhhhhhhhhhhhhh
 bp.bbbbbbbbbbbbbbbbbb
 b...cb.....b.......cb
 b.bb.b.....b........b
@@ -175,12 +271,12 @@ b.bb...b.bbbbb..bbbbb
 b......b...b....c...b
 b..cb..bc..b....b...b
 bbbbbbbbbbbbbbbbbb..b
-.....................
-.....................`,
+hhhhhhhhhhhhhhhhhhhhh
+hhhhhhhhhhhhhhhhhhhhh`,
   map`
-...................
-...................
-b.bbbbbbbbbbbbbbbbb
+hhhhhhhhhhhhhhhhhhh
+hhhhhhhhhhhhhhhhhhh
+bpbbbbbbbbbbbbbbbbb
 b.b...c.b...cb...cb
 b.b.bbb.bbbb.b.bb.b
 b.c.bc..b....b.b..b
@@ -192,11 +288,11 @@ b.bbb.b.bb.b.b.bb.b
 b.b.....b..b.bbbbbb
 b.b.bbbbb..b.....cb
 b.b.bcb....bbbbbb.b
-b.bcb.bbbb.b..b..pb
+b.bcb.bbbb.b..b...b
 b...b...c..b.c...cb
 bbbbbbbbbbbbbbbbb.b
-...................
-...................`,
+hhhhhhhhhhhhhhhhhhh
+hhhhhhhhhhhhhhhhhhh`,
   map`
 fffffffffffffff
 fffffffffffffff
@@ -213,12 +309,19 @@ fffffffffffffff`
 ]
 
 setMap(levels[level])
-
 onInput("s", () => {
   getFirst(player).y += 1
 })
 onInput("w", () => {
-  getFirst(player).y -= 1
+  if (current_map == "shop") {
+    level = 0;
+    console.log(level);
+    clearText();
+    setMap(levels[level]);
+    new_game();
+  } else {
+    getFirst(player).y -= 1
+  }
 })
 onInput("a", () => {
   getFirst(player).x -= 1
@@ -226,77 +329,260 @@ onInput("a", () => {
 onInput("d", () => {
   getFirst(player).x += 1
 })
+onInput("k", () => {
+  if (level == 0) {
+    clearText()
+    next_level()
+  } else {
+    handlePurchase(16, "Water");
+  }
+});
+onInput("l", () => { handlePurchase(25, "Desert") });
 
 /*code to reset the current level*/
+
 onInput("j", () => {
-  setMap(levels[level]);
+  if (current_map == "shop") {
+    handlePurchase(10, "Grass")
+  } else {
+    current_map = level;
+    setMap(levels[level]);
+  }
+
 })
 
 
-if (level == 0) {
-  addText("Maze Game", {
-    x: 6,
+
+
+
+function new_game() {
+  if (level == 0) {
+    addText("Maze Game", {
+      x: 6,
+      y: 2,
+      size: 1,
+      color: color`6`
+    })
+    addText("Goal is to come out\n of maze and also \nearn COINS in this\n      journey", {
+      x: 1,
+      y: 5,
+      size: 0.5,
+      color: color`2`
+    })
+    addText("\nPress 'k' to start", {
+      x: 1,
+      y: 10,
+      size: 0.5,
+      color: color`4`
+    })
+    addText("-Darshan", {
+      x: 12,
+      y: 15,
+      size: 0.5,
+      color: color`2`
+    })
+
+  }
+}
+new_game();
+
+let buy = 1
+
+function success(background) {
+  clearText();
+  current_map = "success_buy";
+  setMap(success_buy);
+  addText("SUCCESSFULLY bought\n       background", {
+    x: 1,
+    y: 4,
+    size: 1,
+    color: color`2`
+  })
+  addText("Current background=\n", {
+    x: 0,
+    y: 8,
+    size: 1,
+    color: color`2`
+  })
+
+  if (background == "Grass") {
+    setBackground(grass);
+    addText(background, {
+      x: 2,
+      y: 5,
+      size: 1,
+      color: color`D`
+    })
+    addText(background, {
+      x: 6,
+      y: 9,
+      size: 1,
+      color: color`D`
+    })
+  } else if (background == "Water") {
+    setBackground(water);
+    addText(background, {
+      x: 2,
+      y: 5,
+      size: 1,
+      color: color`7`
+    })
+    addText(background, {
+      x: 6,
+      y: 9,
+      size: 1,
+      color: color`7`
+    })
+  } else if (background == "Desert") {
+    setBackground(desert);
+    addText(background, {
+      x: 2,
+      y: 5,
+      size: 1,
+      color: color`9`
+    })
+    addText(background, {
+      x: 6,
+      y: 9,
+      size: 1,
+      color: color`9`
+    })
+  }
+}
+
+function shop() {
+  // onInput("i", () => {
+  current_map = "shop";
+  clearText();
+  setMap(shop_map);
+  addText("SHOP    " + totalCoins, {
+    x: 8,
     y: 2,
     size: 1,
     color: color`6`
-  })
-  addText("Goal is to come out\n of maze and also \nearn COINS in this\n      journey", {
-    x: 1,
-    y: 5,
-    size: 0.5,
+  });
+  addText("Backgrounds   Price", {
+    x: 0,
+    y: 4,
+    size: 1,
     color: color`2`
-  })
-  addText("\nPress 'k' to start", {
+  });
+  addText("Grass", {
+    x: 4,
+    y: 6,
+    size: 1,
+    color: color`2`
+  });
+  addText("10(j)", {
+    x: 15,
+    y: 6,
+    size: 1,
+    color: color`2`
+  });
+  addText("Water", {
+    x: 4,
+    y: 9,
+    size: 1,
+    color: color`2`
+  });
+  addText("16(k)", {
+    x: 15,
+    y: 9,
+    size: 1,
+    color: color`2`
+  });
+  addText("Desert", {
+    x: 4,
+    y: 12,
+    size: 1,
+    color: color`2`
+  });
+  addText("25(l)", {
+    x: 15,
+    y: 12,
+    size: 1,
+    color: color`2`
+  });
+  addText("press 'w' to play", {
     x: 1,
-    y: 10,
-    size: 0.5,
-    color: color`4`
-  })
-  addText("-Darshan", {
-    x: 12,
     y: 15,
-    size: 0.5,
-    color: color`2`
-  })
-  onInput("k", () => {
-    clearText()
-    next_level()
-  })
+    size: 1,
+    color: color`6`
+  });
 }
 
-function isTouchingAny(tileTypes) {
-  let playerTile = getFirst(player)
-  if (!playerTile) return false;
+function handlePurchase(price, background) {
+  // return () => {
+  //   if (totalCoins >= price) {
+  //     buy += 1;
+  //     totalCoins = totalCoins - price;
+  //     console.log("here:", totalCoins);
+  //     success();
+  //     setTimeout(shop, 2000)
+  //     // shop();
+  //   } else if(totalCoins<price) {
+  //     // if (buy > 1) {
+  //      //  if (totalCoins >= price) {
+  //      //    totalCoins = totalCoins - price;
+  //      //    console.log("not here:", totalCoins);
+  //      //    success();
+  //      //    setTimeout(shop, 2000)
+  //      //  }
+  //      // else {
+  //       clearText();
+  //       setMap(n_enough_coins);
+  //       console.log("else", totalCoins);
+  //       addText("not enough Coins", {
+  //         x: 2,
+  //         y: 7,
+  //         size: 1,
+  //         color: color`2`
+  //       });
+  //       // addText("press 'i' to\n  go back", {
+  //       //   x: 4,
+  //       //   y: 9,
+  //       //   size: 1,
+  //       //   color: color`6`
+  //       // });
+  //       setTimeout(shop, 2000)
+  //       // shop();
+  //     // }
+  //   }
+  // };
+  if (totalCoins >= price) {
+    success(background);
+    totalCoins -= price;
+    setTimeout(shop, 2000)
+  } else {
+    clearText();
+    current_map = n_enough_coins;
+    setMap(n_enough_coins);
+    console.log("else", totalCoins);
+    addText("not enough Coins", {
+      x: 2,
+      y: 7,
+      size: 1,
+      color: color`2`
+    });
+    setTimeout(shop, 2000)
+  }
 
-  let tiles = tileTypes.map((tileType) => getAll(tileType)).flat()
-  let result = false
-
-  tiles.forEach((tile) => {
-    if ((tile.x == playerTile.x) && (tile.y == playerTile.y)) {
-      // Doesn't work without a variable for some reason. It should!
-      result = {
-        x: tile.x,
-        y: tile.y,
-      }
-    }
-  })
-  return result
 }
 
 
-let totalCoins = 0
 
 //funct to set new level
 function next_level() {
-  if(level!=0){
-    // pausePlayback(playback)
+  if (level != 0) {
+    playback.end()
     playTune(win, 1)
-    // resumePlayback(playback)
+    playTune(bgm, Infinity)
   }
   clearText()
   totalCoins += coins_earned
   coins_earned = 0
   level += 1
+  current_map = level;
   setMap(levels[level])
   if (level == 1) {
     addText("LEVEL=" + level, {
@@ -338,61 +624,45 @@ function next_level() {
       size: 1,
       color: color`4`
     })
+    onInput("i", () => {
+      shop()
+    })
   }
 }
 
-let coins_earned = 0
-
-const moveNotesUp = () => {
-  const noteTypes = [up, down, left, right];
-  for (const type of noteTypes) {
-    const noteSprites = getAll(type);
-    for (const note of noteSprites) {
-      if (note.y > 0) {
-        note.y -= 1;
-      } else {}
-    }
-  }
-};
-
-setInterval(() => {
-  moveNotesUp();
-}, 80);
-
-
-
 //music for different events
 const bgm = tune`
-144.92753623188406: D5-144.92753623188406 + undefined/144.92753623188406,
-144.92753623188406: undefined/144.92753623188406 + D5-144.92753623188406,
-144.92753623188406: undefined/144.92753623188406 + C5-144.92753623188406,
-144.92753623188406,
-144.92753623188406: C5-144.92753623188406,
-144.92753623188406: undefined/144.92753623188406,
-144.92753623188406: undefined/144.92753623188406,
-144.92753623188406: B4-144.92753623188406 + undefined/144.92753623188406,
-144.92753623188406: undefined/144.92753623188406,
-144.92753623188406: undefined/144.92753623188406,
-144.92753623188406: undefined/144.92753623188406,
-144.92753623188406: undefined/144.92753623188406,
-144.92753623188406,
-144.92753623188406: undefined/144.92753623188406,
-144.92753623188406: G4-144.92753623188406 + undefined/144.92753623188406,
-144.92753623188406: A4-144.92753623188406 + undefined/144.92753623188406,
-144.92753623188406: undefined/144.92753623188406,
-289.8550724637681,
-144.92753623188406: undefined/144.92753623188406,
-144.92753623188406: C5-144.92753623188406,
-144.92753623188406: undefined/144.92753623188406,
-144.92753623188406,
-144.92753623188406: D5-144.92753623188406 + undefined/144.92753623188406,
-144.92753623188406: undefined/144.92753623188406,
-144.92753623188406: D4-144.92753623188406 + undefined/144.92753623188406,
-144.92753623188406: D4-144.92753623188406 + undefined/144.92753623188406,
-144.92753623188406: D4-144.92753623188406 + undefined/144.92753623188406,
-144.92753623188406: undefined/144.92753623188406,
-144.92753623188406: undefined/144.92753623188406,
-289.8550724637681`;
+82.41758241758242: D5-82.41758241758242 + undefined/82.41758241758242,
+82.41758241758242: undefined/82.41758241758242 + D5-82.41758241758242,
+82.41758241758242: undefined/82.41758241758242 + C5-82.41758241758242,
+82.41758241758242,
+82.41758241758242: C5-82.41758241758242,
+82.41758241758242: undefined/82.41758241758242,
+82.41758241758242: undefined/82.41758241758242,
+82.41758241758242: B4-82.41758241758242 + undefined/82.41758241758242,
+82.41758241758242: undefined/82.41758241758242,
+82.41758241758242: undefined/82.41758241758242,
+82.41758241758242: undefined/82.41758241758242,
+82.41758241758242: undefined/82.41758241758242,
+82.41758241758242,
+82.41758241758242: undefined/82.41758241758242,
+82.41758241758242: G4-82.41758241758242 + undefined/82.41758241758242,
+82.41758241758242: A4-82.41758241758242 + undefined/82.41758241758242,
+82.41758241758242: undefined/82.41758241758242 + A4-82.41758241758242,
+164.83516483516485,
+82.41758241758242: undefined/82.41758241758242 + B4-82.41758241758242,
+82.41758241758242: C5-82.41758241758242,
+82.41758241758242: undefined/82.41758241758242,
+82.41758241758242,
+82.41758241758242: D5-82.41758241758242 + undefined/82.41758241758242,
+82.41758241758242: undefined/82.41758241758242,
+82.41758241758242: D4-82.41758241758242 + undefined/82.41758241758242,
+82.41758241758242: D4-82.41758241758242 + undefined/82.41758241758242,
+82.41758241758242: D4-82.41758241758242 + undefined/82.41758241758242,
+82.41758241758242: undefined/82.41758241758242,
+82.41758241758242: undefined/82.41758241758242,
+82.41758241758242: G4-82.41758241758242,
+82.41758241758242: G4-82.41758241758242`;
 
 const win = tune`
 208.33333333333334: C4-208.33333333333334 + undefined/208.33333333333334,
@@ -413,6 +683,10 @@ const coin_music = tune`
 4945.054945054945`;
 
 const playback = playTune(bgm, Infinity)
+
+
+let totalCoins = 26
+let coins_earned = 0
 
 afterInput(() => {
 
@@ -439,63 +713,55 @@ afterInput(() => {
     })
   }
 
-  let player_tile_x = getFirst(player).x
-  let player_tile_y = getFirst(player).y
-  console.log(player_tile_x, player_tile_y)
-  let items = getTile(player_tile_x, player_tile_y);
-  console.log(items);
-  if (items.length > 1) {
-    if (items[1].type == coin) {
-      playTune(coin_music,1)
-      items[1].remove();
-      coins_earned += 1
-    }
-  }
-  //checking if the player reached end - level 1
-  if (level == 1) {
-    if (player_tile_x == 10 && player_tile_y == 17) {
-      let winning_msg = addText("You Won!!!", {
-        x: 5,
-        y: 7,
-        size: 5,
-        color: color`0`
-      })
-      setTimeout(next_level, 2000)
 
-    }
-  } else if (level == 2) {
-    if ([player_tile_x, player_tile_y].toString() == [18, 15].toString() || [player_tile_x, player_tile_y].toString() == [19, 15].toString()) {
-      let winning_msg = addText("You Won!!", {
-        x: 6,
-        y: 7,
-        size: 5,
-        color: color`0`
-      })
-      setTimeout(next_level, 2000)
-    }
-  } else if (level == 3) {
-    if (player_tile_x == 17 && player_tile_y == 16) {
-      let winning_msg = addText("You Won!!!", {
-        x: 5,
-        y: 7,
-        size: 5,
-        color: color`0`
-      })
-      setTimeout(next_level, 2000)
-    }
-  }
+  let playerSprite = getFirst(player);
+  if (playerSprite) {
+    let player_tile_x = playerSprite.x;
+    let player_tile_y = playerSprite.y;
+    console.log(player_tile_x, player_tile_y);
 
-  if (thinksdestoy == destroyabelthinksperlevel){
-    if (tilesWith(player, hous).length >= 1) {
-      addText("Level " + text_level + ", compleated", { x: 1, y: 7, color: color`9` })
-      level = level + 1
-      text_level = text_level + 1
-      thinksdestoy = 0
-      setMap(levels[level])
+    let items = getTile(player_tile_x, player_tile_y);
+    console.log(items);
+    if (items.length > 1) {
+      if (items[1].type == coin) {
+        playTune(coin_music, 1);
+        items[1].remove();
+        coins_earned += 1;
+      }
     }
-  }
-  if (level >= playable_levels) {
-    addText("You won!", { x: 7, y: 7, color: color`9` })
-    addText("Game is Finish!", { x: 2, y: 9, color: color`9` })
+    //checking if the player reached end - level 1
+    if (level == 1) {
+      if (player_tile_x == 10 && player_tile_y == 17) {
+        let winning_msg = addText("You Won!!!", {
+          x: 5,
+          y: 7,
+          size: 5,
+          color: color`0`
+        })
+        setTimeout(next_level, 2000)
+
+      }
+    } else if (level == 2) {
+      if ([player_tile_x, player_tile_y].toString() == [18, 15].toString() || [player_tile_x, player_tile_y].toString() == [19, 15].toString()) {
+        let winning_msg = addText("You Won!!", {
+          x: 6,
+          y: 7,
+          size: 5,
+          color: color`0`
+        })
+        setTimeout(next_level, 2000)
+      }
+    } else if (level == 3) {
+      if (player_tile_x == 17 && player_tile_y == 16) {
+        let winning_msg = addText("You Won!!!", {
+          x: 5,
+          y: 7,
+          size: 5,
+          color: color`0`
+        })
+        setTimeout(next_level, 2000)
+        current_map = "shop";
+      }
+    }
   }
 })
