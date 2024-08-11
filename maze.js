@@ -629,14 +629,7 @@ function next_level() {
     })
   }
 }
-var start = Date.now();
-setInterval(function() {
-    var delta = Date.now() - start; // milliseconds elapsed since start
-    …
-    output(Math.floor(delta / 1000)); // in seconds
-    // alternatively just show wall clock time:
-    output(new Date().toUTCString());
-}, 1000); // update about every second
+
 //music for different events
 const bgm = tune`
 82.41758241758242: D5-82.41758241758242 + undefined/82.41758241758242,
@@ -694,21 +687,6 @@ const playback = playTune(bgm, Infinity)
 
 let totalCoins = 0
 let coins_earned = 0
-
-var interval = 1000; // ms
-var expected = Date.now() + interval;
-setTimeout(step, interval);
-function step() {
-    var dt = Date.now() - expected; // the drift (positive for overshooting)
-    if (dt > interval) {
-        // something really bad happened. Maybe the browser (tab) was inactive?
-        // possibly special handling to avoid futile "catch up" run
-    }
-    … // do what is to be done
-
-    expected += interval;
-    setTimeout(step, Math.max(0, interval - dt)); // take into account drift
-}
 
 afterInput(() => {
 
